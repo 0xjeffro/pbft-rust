@@ -26,7 +26,7 @@ src/
 │   ├── client.rs        # Client logic
 │   ├── node.rs          # Consensus node logic
 │   ├── server.rs        # Server-related code
-├── utils/               # Utility functions
+├── ├── utils.rs         # Utility functions
 ```
 ## Getting Started
 **1. Clone the repository.**
