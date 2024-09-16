@@ -4,11 +4,9 @@ use crate::network::client::Client;
 
 pub fn launch(n: u32, f: u32) -> io::Result<()> {
     let mut servers = Vec::new();
-    let mut left_faulty_nums = f;
     for i in 0..n {
         let mut is_faulty = false;
-        if left_faulty_nums > 0 {
-            left_faulty_nums -= 1;
+        if i >= n - f {
             is_faulty = true;
         }
         let port = 8000 + i;

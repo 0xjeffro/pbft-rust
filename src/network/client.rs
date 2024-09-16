@@ -96,7 +96,7 @@ async fn client_handle_reply(reply_msg: web::Json<ReplyMsg>, client_data: Data<C
         }
     }
     if cnt == 2 * f + 1 {
-        println!("✅  Client received 2f+1 identical replies, consensus reached: {}", reply_msg.result);
+        println!("✅  Client received f+1 identical replies, consensus reached: {}", reply_msg.result);
     }
     HttpResponse::Ok().json(json!({"status": "client ok"}))
 }

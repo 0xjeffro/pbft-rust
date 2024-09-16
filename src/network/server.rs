@@ -59,6 +59,9 @@ async fn handle_req(request_msg: web::Json<RequestMsg>, server_data: Data<Server
         emoji = "😈";
     }
     println!("[{} Node{}] Received RequestMsg: {:?}", emoji, server_data.node.id, request_msg);
+    if server_data.node.is_faulty {
+        return HttpResponse::Ok().json(response_body);
+    }
     // Paper 4.3, second paragraph
     // When the primary receives a client request,
     // it assigns a sequence number to the request
@@ -151,6 +154,9 @@ async fn handle_pre_prepare(pre_prepare_msg: web::Json<crate::consensus::message
         emoji = "😈";
     }
     println!("[{} Node{}] Received PrePrepareMsg: {:?}", emoji, server_data.node.id, pre_prepare_msg);
+    if server_data.node.is_faulty {
+        return HttpResponse::Ok().json(response_body);
+    }
     let mut request_msg = RequestMsg { // request message corresponding to the pre-prepare message
         time_stamp: 0,
         client_id: 0,
@@ -249,6 +255,9 @@ async fn handle_prepare(prepare_msg: web::Json<crate::consensus::message::VoteMs
         emoji = "😈";
     }
     println!("[{} Node{}] Received PrepareMsg: {:?}", emoji, server_data.node.id, prepare_msg);
+    if server_data.node.is_faulty {
+        return HttpResponse::Ok().json(response_body);
+    }
     let n = server_data.node.node_table.len();
     let f = (n - 1) / 3;
     let prepare_msg = prepare_msg.into_inner();
@@ -281,7 +290,7 @@ async fn handle_prepare(prepare_msg: web::Json<crate::consensus::message::VoteMs
                 cnt += 1;
             }
         }
-        if cnt == 2 * f + 1 {
+        if cnt == 2 * f  {
             {
                 let mut current_stage_guard = server_data
                     .node
@@ -352,6 +361,9 @@ async fn handle_commit(commit_msg: web::Json<crate::consensus::message::VoteMsg>
         emoji = "😈";
     }
     println!("[{} Node{}] Received CommitMsg: {:?}", emoji, server_data.node.id, commit_msg);
+    if server_data.node.is_faulty {
+        return HttpResponse::Ok().json(response_body);
+    }
     let n = server_data.node.node_table.len();
     let f = (n - 1) / 3;
     let commit_msg = commit_msg.into_inner();
