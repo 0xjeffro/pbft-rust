@@ -1,0 +1,16 @@
+[package]
+name = "pbft-rust"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+clap = "4.5.17"
+tokio = "1.40.0"
+hyper = "1.4.1"
+serde_json = "1.0.128"
+actix-web = "4.0"
+serde = { version = "1.0.210", features = ["derive"] }
+reqwest = { version = "0.12.7", features = ["json"] }
+sha2 = "0.11.0-pre.4"
+hex = "0.4.3"
+futures = "0.3.30"
