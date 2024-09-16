@@ -7,3 +7,12 @@ pub fn compute_digest(request_msg: &RequestMsg) -> String {
     let result = hasher.finalize();
     hex::encode(result)
 }
+
+pub fn verify_msg(msg: &PrePrepareMsg, req_view_id: u32, req_digest: String) -> bool {
+    let correct_digest = req_digest == msg.digest;
+    let correct_view_id = req_view_id == msg.view_id;
+    //TODO: adopt upper/lower bound check.
+    // Paper page 4, top right:
+    // the sequence number in the pre-prepare message is between a low water mark and a high water mark
+    correct_digest && correct_view_id
+}
