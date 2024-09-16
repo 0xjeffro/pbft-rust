@@ -10,7 +10,6 @@ pub(crate) struct Node {
     pub(crate) node_table: HashMap<u32, String>,  // Node.id -> url:port
     pub(crate) view: View,
     pub(crate) current_state: consensus::pbft::State, // current state of the node
-    committed_msgs: Vec<RequestMsg>,
     pub(crate) msg_buffer : MsgBuffer,
 }
 
@@ -31,7 +30,7 @@ pub(crate) struct MsgBuffer {
 impl Node {
     pub fn new(id: u32, n: u32, is_faulty: bool) -> Node {
         let mut node_table = HashMap::new();
-        let mut base_port = 8000;
+        let base_port = 8000;
         for i in 0..n {
             node_table.insert(i, "localhost:".to_string() + &(base_port + i).to_string());
         }
@@ -58,7 +57,6 @@ impl Node {
             node_table,
             view,
             current_state,
-            committed_msgs: vec![],
             msg_buffer,
         }
     }

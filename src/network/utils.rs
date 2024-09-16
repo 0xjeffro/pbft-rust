@@ -16,3 +16,15 @@ pub fn verify_msg(msg: &PrePrepareMsg, req_view_id: u32, req_digest: String) -> 
     // the sequence number in the pre-prepare message is between a low water mark and a high water mark
     correct_digest && correct_view_id
 }
+
+pub fn generate_fake_request_msg() -> RequestMsg {
+    let mut request_msg = RequestMsg {
+        operation: "fake".to_string(),
+        time_stamp: 0,
+        client_id: 0,
+        sequence_id: 0,
+        digest: "".to_string(),
+    };
+    request_msg.digest = compute_digest(&request_msg);
+    request_msg
+}

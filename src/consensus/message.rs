@@ -22,12 +22,13 @@ pub struct PrePrepareMsg { //< <PRE-PREPARE, v, n, d>, m >
     pub(crate) request_msg: RequestMsg, // 'm', the request message
 }
 
-struct ReplyMsg {
-    time_stamp: u64,
-    view_id: u32,
-    node_id: u32, // 'r', the node(replica) id
-    client_id: u32,
-    result: String,
+#[derive(Serialize, Deserialize, Debug, Clone)]
+pub(crate) struct ReplyMsg {
+    pub(crate) time_stamp: u64,
+    pub(crate) view_id: u32,
+    pub(crate) node_id: u32, // 'r', the node(replica) id
+    pub(crate) client_id: u32,
+    pub(crate) result: String,
 }
 
 

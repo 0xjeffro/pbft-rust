@@ -5,24 +5,28 @@ use std::thread::JoinHandle;
 use actix_web::{post, web, App, HttpResponse, HttpServer, Responder};
 use actix_web::web::Data;
 use serde_json::json;
-use crate::consensus::message::RequestMsg;
+use crate::consensus::message::{RequestMsg, ReplyMsg};
 use futures::future::join_all;
 
 #[derive(Clone)]
 pub(crate) struct Client {
+    n : u32,
     server_table: HashMap<u32, String>,
+    pub(crate) reply_msgs: Arc<Mutex<Vec<ReplyMsg>>>,
     handle: Arc<Mutex<Option<JoinHandle<()>>>>,
 }
 
 impl Client {
     pub(crate) fn new(n: u32) -> Self {
         let mut server_table = HashMap::new();
-        let mut base_port = 8000;
+        let base_port = 8000;
         for i in 0..n {
             server_table.insert(i, "127.0.0.1:".to_string() + &(base_port + i).to_string());
         }
         Self {
+            n,
             server_table,
+            reply_msgs: Arc::new(Mutex::new(vec![])),
             handle: Arc::new(Mutex::new(None)),
         }
     }
@@ -37,19 +41,6 @@ impl Client {
         });
         let mut handle_lock = self.handle.lock().unwrap();
         *handle_lock = Some(handle);
-    }
-
-
-    fn join(self) {
-        // try to acquire lock on handle
-        if let Ok(mut handle_lock) = self.handle.lock() {
-            // use `take()` method to take out the value in `Option<JoinHandle<()>>` and set it to `None`
-            if let Some(handle) = handle_lock.take() {
-                handle.join().unwrap();
-            }
-        } else {
-            eprintln!("Failed to acquire lock on handle");
-        }
     }
 }
 
@@ -76,10 +67,10 @@ async fn client_handle_req(request_msg: web::Json<RequestMsg>, client_data: Data
             {
                 Ok(response) => {
                     // Handle the response here if needed
-                    // println!("  -- Response from server {}: {:?}", id_clone, response.status());
+                    println!("  -- Response from server {}: {:?}", id_clone, response.status());
                 }
                 Err(e) => {
-                    // eprintln!(" -- Error sending request to node {}: {}", id_clone, e);
+                    eprintln!(" -- Error sending request to node {}: {}", id_clone, e);
                 }
             }
         }
@@ -91,12 +82,32 @@ async fn client_handle_req(request_msg: web::Json<RequestMsg>, client_data: Data
     HttpResponse::Ok().json(json!({"status": "client ok"}))
 }
 
+#[post("/reply")]
+async fn client_handle_reply(reply_msg: web::Json<ReplyMsg>, client_data: Data<Client>) -> impl Responder {
+    println!("[💻 Client] Received ReplyMsg: {:?}", reply_msg);
+    let n = client_data.n;
+    let reply_msg = reply_msg.into_inner();
+    client_data.reply_msgs.lock().unwrap().push(reply_msg.clone());
+    let f = (n - 1) / 3;
+    let mut cnt = 0;
+    for reply in client_data.reply_msgs.lock().unwrap().iter() {
+        if reply.time_stamp == reply_msg.time_stamp && reply.view_id == reply_msg.view_id && reply.result == reply_msg.result {
+            cnt += 1;
+        }
+    }
+    if cnt == 2 * f + 1 {
+        println!("✅  Client received 2f+1 identical replies, consensus reached: {}", reply_msg.result);
+    }
+    HttpResponse::Ok().json(json!({"status": "client ok"}))
+}
+
 fn start_client(client_data: Arc<Client>) -> io::Result<()> {
     actix_web::rt::System::new().block_on(async move {
         let client_server = HttpServer::new(move || {
             App::new()
                 .app_data(Data::from(client_data.clone()))
                 .service(client_handle_req)
+                .service(client_handle_reply)
         })
             .bind(("127.0.0.1", 9000))?; // client server runs on port 9000
 
